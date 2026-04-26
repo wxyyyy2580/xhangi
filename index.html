@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>给亲爱的你</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #1a3a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 飘落花瓣 */
+        .petal {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: rgba(200, 150, 180, 0.6);
+            border-radius: 50% 0 50% 50%;
+            animation: fall linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-10vh) rotate(0deg) translateX(0);
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(110vh) rotate(720deg) translateX(30px);
+                opacity: 0;
+            }
+        }
+
+        /* 主容器 */
+        .container {
+            position: relative;
+            width: 320px;
+            height: 200px;
+            perspective: 1000px;
+        }
+
+        /* ========== 信封 ========== */
+        .envelope {
+            position: absolute;
+            width: 320px;
+            height: 200px;
+            z-index: 10;
+            transition: opacity 0.5s ease;
+        }
+
+        .envelope.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* 信封主体 */
+        .envelope-body {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #f0e0d0 0%, #e5d5c5 100%);
+            border-radius: 3px;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.25);
+        }
+
+        /* 信封底部V形 */
+        .envelope-bottom {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60%;
+            background: linear-gradient(180deg, #e8d5c4 0%, #dcc0ac 100%);
+            clip-path: polygon(0 40%, 50% 100%, 100% 40%, 100% 100%, 0 100%);
+            z-index: 2;
+        }
+
+        /* 信封翻盖（可翻转） */
+        .envelope-flap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 65%;
+            background: linear-gradient(180deg, #f5e6d8 0%, #e8d5c4 100%);
+            clip-path: polygon(0 0, 50% 100%, 100% 0);
+            transform-origin: top center;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 4;
+            border-radius: 3px 3px 0 0;
+        }
+
+        .envelope.open .envelope-flap {
+            transform: rotateX(180deg);
+            z-index: 1;
+        }
+
+        /* 封面内容 */
+        .cover-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        /* 邮票 */
+        .stamp {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 50px;
+            height: 58px;
+            background: #fff;
+            border: 1.5px dashed #c0392b;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3px;
+            z-index: 5;
+        }
+
+        .stamp-heart {
+            width: 26px;
+            height: 26px;
+            border: 1.5px solid #c0392b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2px;
+        }
+
+        .stamp-heart::after {
+            content: "♥";
+            color: #c0392b;
+            font-size: 14px;
+        }
+
+        .stamp-text {
+            font-size: 5px;
+            color: #c0392b;
+            text-align: center;
+            line-height: 1.1;
+        }
+
+        /* 封面文字 */
+        .cover-text {
+            font-size: 18px;
+            color: #8b7355;
+            letter-spacing: 3px;
+            font-weight: 300;
+        }
+
+        /* 火漆印章 - 大幅往下挪到信封最底部 */
+        .wax-seal {
+            position: absolute;
+            top: 175px;  /* 信封高200px，175px几乎到底部 */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 44px;
+            height: 44px;
+            background: radial-gradient(circle at 35% 35%, #c0392b, #922b21);
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            z-index: 6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .wax-seal:active {
+            transform: translate(-50%, -50%) scale(0.92);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+
+        .wax-seal::before {
+            content: "❤";
+            color: rgba(255,255,255,0.9);
+            font-size: 18px;
+            pointer-events: none;
+        }
+
+        /* 外面圆圈 - 同步大幅往下挪 */
+        .wax-string {
+            position: absolute;
+            top: 175px;  /* 和爱心完全同步，175px */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            border: 1.5px solid #c0392b;
+            border-radius: 50%;
+            opacity: 0.25;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        /* 左下角提示文字 */
+        .hint-text {
+            position: absolute;
+            bottom: 6px;
+            left: 10px;
+            font-size: 13px;
+            color: rgba(139, 115, 85, 0.7);
+            z-index: 6;
+            pointer-events: none;
+            letter-spacing: 1px;
+        }
+
+        /* ========== 信纸 ========== */
+        .letter {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.3);
+            width: 300px;
+            height: 0;
+            background: linear-gradient(180deg, #faf8f5 0%, #f5f0e8 100%);
+            border-radius: 6px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            padding: 0;
+            opacity: 0;
+            z-index: 5;
+            overflow: hidden;
+            transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .letter.show {
+            top: 50%;
+            transform: translate(-50%, -50%) scale(1);
+            width: 320px;
+            height: 480px;
+            padding: 25px 20px;
+            opacity: 1;
+        }
+
+        /* 信纸内边装饰 */
+        .letter-inner {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            position: relative;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+
+        .letter-inner::-webkit-scrollbar {
+            width: 3px;
+        }
+        .letter-inner::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .letter-inner::-webkit-scrollbar-thumb {
+            background: rgba(139, 115, 85, 0.2);
+            border-radius: 2px;
+        }
+
+        /* 关闭按钮 */
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            font-size: 12px;
+            color: #999;
+            cursor: pointer;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.5s ease 0.8s;
+        }
+
+        .letter.show .close-btn {
+            opacity: 1;
+        }
+
+        /* 信纸标题 */
+        .letter-header {
+            font-size: 15px;
+            color: #8b7355;
+            margin-bottom: 12px;
+            letter-spacing: 2px;
+            padding-right: 30px;
+        }
+
+        /* 信纸内容 */
+        .letter-content {
+            font-size: 14px;
+            line-height: 1.9;
+            color: #5a4a3a;
+            min-height: 350px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .letter-content .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 16px;
+            background: #8b7355;
+            animation: blink 0.8s infinite;
+            vertical-align: middle;
+            margin-left: 1px;
+        }
+
+        @keyframes blink {
+            0%, 45% { opacity: 1; }
+            55%, 100% { opacity: 0; }
+        }
+
+        /* 落款 */
+        .letter-footer {
+            margin-top: 25px;
+            text-align: right;
+            font-size: 13px;
+            color: #8b7355;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        .letter-footer.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- 花瓣容器 -->
+    <div id="petals"></div>
+
+    <div class="container" id="container">
+        <!-- 信封 -->
+        <div class="envelope" id="envelope">
+            <div class="envelope-body"></div>
+            <div class="envelope-bottom"></div>
+            <div class="envelope-flap"></div>
+
+            <div class="cover-content">
+                <div class="stamp">
+                    <div class="stamp-heart"></div>
+                    <div class="stamp-text">Valentine's Day<br>14th of February</div>
+                </div>
+                <div class="cover-text">To 亲爱的你</div>
+            </div>
+
+            <!-- 外面圆圈 - 大幅往下挪 -->
+            <div class="wax-string"></div>
+            <!-- 火漆印章 - 大幅往下挪 -->
+            <div class="wax-seal" id="waxSeal" onclick="openLetter()"></div>
+
+            <!-- 左下角提示 -->
+            <div class="hint-text">点击红色爱心</div>
+        </div>
+
+        <!-- 信纸 -->
+        <div class="letter" id="letter">
+            <div class="close-btn" onclick="closeLetter()">关闭</div>
+            <div class="letter-inner" id="letterInner">
+                <div class="letter-header">To、你</div>
+                <div class="letter-content" id="letterText"><span class="cursor"></span></div>
+                <div class="letter-footer" id="letterFooter">
+                    永远爱你的我<br>
+                    <span style="font-size:11px; color:#aaa;">2026年4月24日</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 情书全文
+        const fullText = `。`;
+
+        let isOpen = false;
+        let typeTimer = null;
+        let charIndex = 0;
+        let isTyping = false;
+
+        // 生成花瓣
+        function createPetals() {
+            const container = document.getElementById('petals');
+            const colors = [
+                'rgba(200,150,180,0.6)',
+                'rgba(220,170,190,0.5)',
+                'rgba(180,140,170,0.5)',
+                'rgba(210,160,180,0.55)',
+                'rgba(190,150,170,0.5)'
+            ];
+
+            for (let i = 0; i < 12; i++) {
+                const petal = document.createElement('div');
+                petal.className = 'petal';
+                petal.style.left = Math.random() * 100 + 'vw';
+                petal.style.animationDuration = (Math.random() * 5 + 7) + 's';
+                petal.style.animationDelay = Math.random() * 10 + 's';
+                petal.style.background = colors[Math.floor(Math.random() * colors.length)];
+                petal.style.width = (Math.random() * 6 + 6) + 'px';
+                petal.style.height = (Math.random() * 6 + 6) + 'px';
+                container.appendChild(petal);
+            }
+        }
+
+        // 打字机效果
+        function startTyping() {
+            const textEl = document.getElementById('letterText');
+            const cursor = textEl.querySelector('.cursor');
+            charIndex = 0;
+            isTyping = true;
+
+            textEl.innerHTML = '';
+            textEl.appendChild(cursor);
+
+            function typeNext() {
+                if (charIndex < fullText.length) {
+                    const span = document.createElement('span');
+                    span.textContent = fullText.charAt(charIndex);
+                    textEl.insertBefore(span, cursor);
+                    charIndex++;
+
+                    typeTimer = setTimeout(typeNext, 180);
+                } else {
+                    isTyping = false;
+                    setTimeout(() => {
+                        document.getElementById('letterFooter').classList.add('show');
+                    }, 400);
+                }
+            }
+
+            typeNext();
+        }
+
+        // 打开信封
+        function openLetter() {
+            if (isOpen) return;
+            isOpen = true;
+
+            const envelope = document.getElementById('envelope');
+            const letter = document.getElementById('letter');
+
+            envelope.classList.add('open');
+
+            setTimeout(() => {
+                envelope.classList.add('hidden');
+                letter.classList.add('show');
+
+                setTimeout(() => {
+                    startTyping();
+                }, 600);
+            }, 700);
+        }
+
+        // 关闭信封
+        function closeLetter() {
+            if (!isOpen) return;
+            isOpen = false;
+
+            clearTimeout(typeTimer);
+            charIndex = 0;
+            isTyping = false;
+
+            const envelope = document.getElementById('envelope');
+            const letter = document.getElementById('letter');
+            const textEl = document.getElementById('letterText');
+            const footer = document.getElementById('letterFooter');
+
+            footer.classList.remove('show');
+            letter.classList.remove('show');
+
+            setTimeout(() => {
+                envelope.classList.remove('hidden');
+
+                setTimeout(() => {
+                    envelope.classList.remove('open');
+                    textEl.innerHTML = '<span class="cursor"></span>';
+                }, 300);
+            }, 500);
+        }
+
+        // 初始化
+        createPetals();
+    </script>
+</body>
+</html>
